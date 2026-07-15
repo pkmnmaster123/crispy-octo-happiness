@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batch Production Calculator</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-2: #243044;
+      --border: #2d3f56;
+      --text: #e8edf4;
+      --muted: #8fa3bc;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(ellipse at top, #1a2a44 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card + .card {
+      margin-top: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .form-grid.two-col {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid.two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+
+    input::placeholder {
+      color: #5a7089;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.7rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #2d3f56;
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 0.4rem 0.65rem;
+      font-size: 0.8rem;
+    }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      min-height: 1.2em;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .user-badge strong {
+      color: var(--text);
+    }
+
+    .product-row {
+      display: grid;
+      grid-template-columns: 1.4fr repeat(4, 1fr) auto;
+      gap: 0.75rem;
+      align-items: end;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .product-row:last-child {
+      border-bottom: none;
+    }
+
+    @media (max-width: 800px) {
+      .product-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .product-row .field-product {
+        grid-column: 1 / -1;
+      }
+
+      .product-row .field-actions {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
+    }
+
+    .row-header {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 600;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1.4fr repeat(4, 1fr) auto;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 800px) {
+      .row-header {
+        display: none;
+      }
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .stat-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .stat-box .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-box .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+
+    .stat-box.highlight .value {
+      color: var(--success);
+    }
+
+    .stat-box.warning .value {
+      color: var(--warning);
+    }
+
+    .batch-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .batch-table th,
+    .batch-table td {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .batch-table th {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .batch-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .batch-table .produce {
+      color: var(--success);
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 8px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .auth-tab.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .save-status {
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .save-status.saved {
+      color: var(--success);
+    }
+
+    .success-msg {
+      color: var(--success);
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Batch Production Calculator</h1>
+      <p>Track daily sales and plan your next production run</p>
+    </header>
+
+    <!-- Login / Register -->
+    <section id="login-section" class="card">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-tab="login">Sign in</button>
+        <button type="button" class="auth-tab" data-tab="register">Create account</button>
+      </div>
+
+      <form id="login-form" class="form-grid">
+        <h2 id="auth-heading">Sign in</h2>
+        <div>
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="current-password" required />
+        </div>
+        <div id="confirm-password-field" class="hidden">
+          <label for="confirm-password">Confirm password</label>
+          <input type="password" id="confirm-password" placeholder="Re-enter password" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn btn-primary" id="auth-submit-btn">Sign in</button>
+        <p id="login-error" class="error-msg" aria-live="polite"></p>
+        <p id="login-success" class="success-msg" aria-live="polite"></p>
+      </form>
+      <p class="login-footer">Each user gets their own saved products and settings in this browser.</p>
+    </section>
+
+    <!-- App -->
+    <section id="app-section" class="hidden">
+      <div class="top-bar">
+        <div class="user-badge">Signed in as <strong id="display-username"></strong></div>
+        <span id="save-status" class="save-status">Saved</span>
+        <button type="button" id="logout-btn" class="btn btn-secondary">Sign out</button>
+      </div>
+
+      <div class="card">
+        <h2>Production settings</h2>
+        <div class="form-grid two-col">
+          <div>
+            <label for="batch-days">Days of stock to cover</label>
+            <input type="number" id="batch-days" min="1" max="90" value="7" />
+          </div>
+          <div>
+            <label for="safety-buffer">Safety buffer (%)</label>
+            <input type="number" id="safety-buffer" min="0" max="100" value="10" />
+          </div>
+        </div>
+        <p class="hint">
+          Next batch = (daily sales × days to cover × (1 + buffer%)) − current inventory.
+          This restocks enough product to cover expected demand plus a small cushion.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Today's sales</h2>
+
+        <div class="row-header">
+          <span>Product</span>
+          <span>Units sold</span>
+          <span>Sell price ($)</span>
+          <span>Unit cost ($)</span>
+          <span>In stock</span>
+          <span></span>
+        </div>
+
+        <div id="product-rows"></div>
+
+        <div class="actions-row">
+          <button type="button" id="add-product-btn" class="btn btn-secondary">+ Add product</button>
+          <button type="button" id="calculate-btn" class="btn btn-primary" style="width: auto; margin-top: 0;">Calculate next batch</button>
+        </div>
+      </div>
+
+      <div id="results-section" class="card hidden">
+        <h2>Next batch plan</h2>
+
+        <div class="results-grid">
+          <div class="stat-box highlight">
+            <div class="label">Total to produce</div>
+            <div class="value" id="total-produce">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Today's revenue</div>
+            <div class="value" id="total-revenue">$0.00</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Today's profit</div>
+            <div class="value" id="total-profit">$0.00</div>
+          </div>
+          <div class="stat-box warning">
+            <div class="label">Batch production cost</div>
+            <div class="value" id="batch-cost">$0.00</div>
+          </div>
+        </div>
+
+        <table class="batch-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Sold today</th>
+              <th>Margin / unit</th>
+              <th>In stock</th>
+              <th>Produce next batch</th>
+            </tr>
+          </thead>
+          <tbody id="batch-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const USERS_KEY = "batchCalc_users";
+    const userDataKey = (username) => `batchCalc_data_${username.toLowerCase()}`;
+    const SESSION_KEY = "batchCalc_currentUser";
+
+    const loginSection = document.getElementById("login-section");
+    const appSection = document.getElementById("app-section");
+    const loginForm = document.getElementById("login-form");
+    const loginError = document.getElementById("login-error");
+    const loginSuccess = document.getElementById("login-success");
+    const displayUsername = document.getElementById("display-username");
+    const logoutBtn = document.getElementById("logout-btn");
+    const productRows = document.getElementById("product-rows");
+    const addProductBtn = document.getElementById("add-product-btn");
+    const calculateBtn = document.getElementById("calculate-btn");
+    const resultsSection = document.getElementById("results-section");
+    const saveStatus = document.getElementById("save-status");
+    const authHeading = document.getElementById("auth-heading");
+    const authSubmitBtn = document.getElementById("auth-submit-btn");
+    const confirmPasswordField = document.getElementById("confirm-password-field");
+    const batchDaysInput = document.getElementById("batch-days");
+    const safetyBufferInput = document.getElementById("safety-buffer");
+
+    let rowId = 0;
+    let currentUser = null;
+    let authMode = "login";
+    let saveTimer = null;
+    let isLoading = false;
+
+    async function hashPassword(password) {
+      const data = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function getUsers() {
+      try {
+        return JSON.parse(localStorage.getItem(USERS_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function getUserData(username) {
+      try {
+        return JSON.parse(localStorage.getItem(userDataKey(username))) || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveUserData(username, data) {
+      localStorage.setItem(userDataKey(username), JSON.stringify({
+        ...data,
+        lastUpdated: new Date().toISOString(),
+      }));
+    }
+
+    function defaultUserData() {
+      return {
+        settings: { batchDays: 7, safetyBuffer: 10 },
+        products: [],
+      };
+    }
+
+    async function seedDefaultAdmin() {
+      const users = getUsers();
+      if (!users.admin) {
+        users.admin = {
+          passwordHash: await hashPassword("batch2026"),
+          createdAt: new Date().toISOString(),
+        };
+        saveUsers(users);
+        saveUserData("admin", defaultUserData());
+      }
+    }
+
+    function setSaveStatus(state) {
+      if (state === "saving") {
+        saveStatus.textContent = "Saving…";
+        saveStatus.classList.remove("saved");
+      } else {
+        saveStatus.textContent = "Saved";
+        saveStatus.classList.add("saved");
+      }
+    }
+
+    function scheduleSave() {
+      if (!currentUser || isLoading) return;
+      setSaveStatus("saving");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        persistCurrentUserData();
+        setSaveStatus("saved");
+      }, 400);
+    }
+
+    function collectFormData() {
+      const products = [...productRows.querySelectorAll(".product-row")].map((row) => ({
+        name: row.querySelector(".input-name").value,
+        sold: row.querySelector(".input-sold").value,
+        price: row.querySelector(".input-price").value,
+        cost: row.querySelector(".input-cost").value,
+        inventory: row.querySelector(".input-inventory").value,
+      }));
+
+      return {
+        settings: {
+          batchDays: batchDaysInput.value,
+          safetyBuffer: safetyBufferInput.value,
+        },
+        products,
+      };
+    }
+
+    function persistCurrentUserData() {
+      if (!currentUser) return;
+      saveUserData(currentUser, collectFormData());
+    }
+
+    function clearProductRows() {
+      productRows.innerHTML = "";
+      rowId = 0;
+    }
+
+    function loadUserWorkspace(username) {
+      isLoading = true;
+      const data = getUserData(username) || defaultUserData();
+
+      batchDaysInput.value = data.settings?.batchDays ?? 7;
+      safetyBufferInput.value = data.settings?.safetyBuffer ?? 10;
+
+      clearProductRows();
+      const products = data.products?.length ? data.products : [{}];
+      products.forEach((product) => addProductRow(product));
+      isLoading = false;
+
+      resultsSection.classList.add("hidden");
+      setSaveStatus("saved");
+    }
+
+    function showLogin() {
+      if (currentUser) {
+        persistCurrentUserData();
+      }
+      currentUser = null;
+      loginSection.classList.remove("hidden");
+      appSection.classList.add("hidden");
+      sessionStorage.removeItem(SESSION_KEY);
+      loginError.textContent = "";
+      loginSuccess.textContent = "";
+      loginForm.reset();
+    }
+
+    function showApp(username) {
+      currentUser = username.toLowerCase();
+      loginSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      displayUsername.textContent = username;
+      sessionStorage.setItem(SESSION_KEY, currentUser);
+      loadUserWorkspace(currentUser);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function createProductRow(data = {}) {
+      const id = ++rowId;
+      const row = document.createElement("div");
+      row.className = "product-row";
+      row.dataset.rowId = id;
+      row.innerHTML = `
+        <div class="field-product">
+          <label>Product name</label>
+          <input type="text" class="input-name" placeholder="e.g. Widget A" value="${escapeHtml(data.name || "")}" />
+        </div>
+        <div>
+          <label>Units sold today</label>
+          <input type="number" class="input-sold" min="0" step="1" value="${data.sold ?? ""}" placeholder="0" />
+        </div>
+        <div>
+          <label>Sell price ($)</label>
+          <input type="number" class="input-price" min="0" step="0.01" value="${data.price ?? ""}" placeholder="0.00" />
+        </div>
+        <div>
+          <label>Unit cost ($)</label>
+          <input type="number" class="input-cost" min="0" step="0.01" value="${data.cost ?? ""}" placeholder="0.00" />
+        </div>
+        <div>
+          <label>Current inventory</label>
+          <input type="number" class="input-inventory" min="0" step="1" value="${data.inventory ?? 0}" placeholder="0" />
+        </div>
+        <div class="field-actions">
+          <label>&nbsp;</label>
+          <button type="button" class="btn btn-danger remove-row-btn">Remove</button>
+        </div>
+      `;
+
+      row.querySelector(".remove-row-btn").addEventListener("click", () => {
+        if (productRows.children.length > 1) {
+          row.remove();
+          scheduleSave();
+        }
+      });
+
+      row.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("input", scheduleSave);
+      });
+
+      return row;
+    }
+
+    function addProductRow(data) {
+      productRows.appendChild(createProductRow(data));
+      scheduleSave();
+    }
+
+    function parseNum(value) {
+      const n = parseFloat(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatMoney(amount) {
+      return "$" + amount.toFixed(2);
+    }
+
+    function calculateBatch() {
+      const batchDays = Math.max(1, parseNum(batchDaysInput.value));
+      const safetyBuffer = Math.max(0, parseNum(safetyBufferInput.value)) / 100;
+
+      const rows = [...productRows.querySelectorAll(".product-row")];
+      const results = [];
+      let totalProduce = 0;
+      let totalRevenue = 0;
+      let totalProfit = 0;
+      let batchCost = 0;
+
+      for (const row of rows) {
+        const name = row.querySelector(".input-name").value.trim() || "Unnamed product";
+        const sold = Math.max(0, parseNum(row.querySelector(".input-sold").value));
+        const price = Math.max(0, parseNum(row.querySelector(".input-price").value));
+        const cost = Math.max(0, parseNum(row.querySelector(".input-cost").value));
+        const inventory = Math.max(0, parseNum(row.querySelector(".input-inventory").value));
+
+        const margin = price - cost;
+        const demandForPeriod = Math.ceil(sold * batchDays * (1 + safetyBuffer));
+        const toProduce = Math.max(0, demandForPeriod - inventory);
+
+        totalProduce += toProduce;
+        totalRevenue += sold * price;
+        totalProfit += sold * margin;
+        batchCost += toProduce * cost;
+
+        results.push({ name, sold, margin, inventory, toProduce });
+      }
+
+      document.getElementById("total-produce").textContent = totalProduce.toLocaleString();
+      document.getElementById("total-revenue").textContent = formatMoney(totalRevenue);
+      document.getElementById("total-profit").textContent = formatMoney(totalProfit);
+      document.getElementById("batch-cost").textContent = formatMoney(batchCost);
+
+      const tbody = document.getElementById("batch-tbody");
+      tbody.innerHTML = results.map((r) => `
+        <tr>
+          <td>${escapeHtml(r.name)}</td>
+          <td>${r.sold.toLocaleString()}</td>
+          <td>${formatMoney(r.margin)}</td>
+          <td>${r.inventory.toLocaleString()}</td>
+          <td class="produce">${r.toProduce.toLocaleString()}</td>
+        </tr>
+      `).join("");
+
+      resultsSection.classList.remove("hidden");
+      resultsSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      scheduleSave();
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      document.querySelectorAll(".auth-tab").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.tab === mode);
+      });
+
+      authHeading.textContent = mode === "login" ? "Sign in" : "Create account";
+      authSubmitBtn.textContent = mode === "login" ? "Sign in" : "Create account";
+      confirmPasswordField.classList.toggle("hidden", mode !== "register");
+      loginError.textContent = "";
+      loginSuccess.textContent = "";
+    }
+
+    function validateUsername(username) {
+      if (username.length < 3) return "Username must be at least 3 characters.";
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) return "Username can only contain letters, numbers, and underscores.";
+      return null;
+    }
+
+    document.querySelectorAll(".auth-tab").forEach((tab) => {
+      tab.addEventListener("click", () => setAuthMode(tab.dataset.tab));
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.textContent = "";
+      loginSuccess.textContent = "";
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+      const normalizedUser = username.toLowerCase();
+
+      const usernameError = validateUsername(normalizedUser);
+      if (usernameError) {
+        loginError.textContent = usernameError;
+        return;
+      }
+
+      if (authMode === "register") {
+        if (password.length < 4) {
+          loginError.textContent = "Password must be at least 4 characters.";
+          return;
+        }
+        if (password !== confirmPassword) {
+          loginError.textContent = "Passwords do not match.";
+          return;
+        }
+
+        const users = getUsers();
+        if (users[normalizedUser]) {
+          loginError.textContent = "That username is already taken.";
+          return;
+        }
+
+        users[normalizedUser] = {
+          passwordHash: await hashPassword(password),
+          createdAt: new Date().toISOString(),
+        };
+        saveUsers(users);
+        saveUserData(normalizedUser, defaultUserData());
+        loginSuccess.textContent = "Account created. Signing you in…";
+        setTimeout(() => showApp(normalizedUser), 600);
+        return;
+      }
+
+      const users = getUsers();
+      const account = users[normalizedUser];
+      if (!account) {
+        loginError.textContent = "No account found with that username.";
+        return;
+      }
+
+      const passwordHash = await hashPassword(password);
+      if (passwordHash !== account.passwordHash) {
+        loginError.textContent = "Invalid username or password.";
+        return;
+      }
+
+      showApp(normalizedUser);
+    });
+
+    logoutBtn.addEventListener("click", showLogin);
+    addProductBtn.addEventListener("click", () => addProductRow());
+    calculateBtn.addEventListener("click", calculateBatch);
+    batchDaysInput.addEventListener("input", scheduleSave);
+    safetyBufferInput.addEventListener("input", scheduleSave);
+
+    (async function init() {
+      await seedDefaultAdmin();
+      const savedUser = sessionStorage.getItem(SESSION_KEY);
+      if (savedUser && getUsers()[savedUser]) {
+        showApp(savedUser);
+      }
+    })();
+  </script>
+</body>
+</html>
